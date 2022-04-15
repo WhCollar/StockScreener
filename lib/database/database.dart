@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:coffee/database/models/ticker.dart';
+import 'package:coffee/models/ticker.dart';
 
 class DBProvider {
   DBProvider._();
@@ -8,23 +8,21 @@ class DBProvider {
   static final DBProvider db = DBProvider._();
 
   static Database? _database;
-  Future<Database> get database async =>
-      _database ??= await initDB();
+
+  Future<Database> get database async => _database ??= await initDB();
 
   initDB() async {
     return await openDatabase(
-      join(await getDatabasesPath(), 'stock_screener.db'),
-      onCreate: (db, version) async {
-        await db.execute('''
+        join(await getDatabasesPath(), 'stock_screener.db'),
+        onCreate: (db, version) async {
+      await db.execute('''
           CREATE TABLE IF NOT EXISTS Ticker (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             title TEXT UNIQUE NOT NULL,
             favorite BIT DEFAULT 0
           )
         ''');
-      },
-      version: 1
-    );
+    }, version: 1);
   }
 
   newTicker(Ticker newTicker) async {
@@ -37,19 +35,15 @@ class DBProvider {
 
   getTicker(int id) async {
     final db = await database;
-    var res =await  db.query("Ticker", where: "id = ?", whereArgs: [id]);
-    return res.isNotEmpty ? Ticker.fromMap(res.first) : Null ;
+    var res = await db.query("Ticker", where: "id = ?", whereArgs: [id]);
+    return res.isNotEmpty ? Ticker.fromMap(res.first) : Null;
   }
 
   Future<List<Ticker>> getAllTicker() async {
     final db = await database;
     var res = await db.query("Ticker");
     List<Ticker> list;
-    if (res.isNotEmpty) {
-      list = res.map((c) => Ticker.fromMap(c)).toList();
-    } else {
-      list = [];
-    }
+    list = res.isNotEmpty ? res.map((c) => Ticker.fromMap(c)).toList() : [];
     return list;
   }
 
@@ -59,23 +53,24 @@ class DBProvider {
       SELECT * FROM Ticker WHERE favorite=1
     ''');
     List<Ticker> list;
-    if (res.isNotEmpty) {
-      list = res.toList().map((e) => Ticker.fromMap(e)).toList();
-    } else {
-      list = [];
-    }
+    list = res.isNotEmpty ? res.map((e) => Ticker.fromMap(e)).toList() : [];
+    return list;
+  }
+
+  Future<List<Ticker>> searchTicker(String query) async {
+    final db = await database;
+    var res = await db.rawQuery("Select * from Ticker where title like '%$query%';");
+    List<Ticker> list;
+    list = res.isNotEmpty ? res.map((c) => Ticker.fromMap(c)).toList() : [];
     return list;
   }
 
   addOrRemoveFromFavorites(Ticker ticker) async {
     final db = await database;
-    Ticker favorite = Ticker(
-        id: ticker.id,
-        title: ticker.title,
-        favorite: !ticker.favorite!);
+    Ticker favorite =
+        Ticker(id: ticker.id, title: ticker.title, favorite: !ticker.favorite!);
     var res = await db.update("Ticker", favorite.toMap(),
-    where: "id = ?", whereArgs: [ticker.id]);
+        where: "id = ?", whereArgs: [ticker.id]);
     return res;
   }
-
 }

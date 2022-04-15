@@ -1,9 +1,10 @@
-import 'package:coffee/widgets/stockScreenerList.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:coffee/api/api.dart';
+import 'package:coffee/widgets/stockScreenerList.dart';
 import "package:http/http.dart" as http;
+import 'package:coffee/models/ticker.dart';
 import 'package:coffee/database/database.dart';
-import 'package:coffee/database/models/ticker.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -15,20 +16,19 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
-    String url =
-        "https://finnhub.io/api/v1/stock/symbol?exchange=US&mic=XNYS&securityType=Common%20Stock&token=c8umg02ad3ibdduembmg";
-    http.get(url).then((response) async {
+
+    String _allTickersXNAS =
+        "https://finnhub.io/api/v1/stock/symbol?exchange=US&mic=XNAS&securityType=Common%20Stock&token=c8umg02ad3ibdduembmg";
+
+    http.get(_allTickersXNAS).then((response) async {
       var parsedListJson = jsonDecode(response.body);
       for (var el in parsedListJson) {
-        String title = el["symbol"];
-        Ticker t = Ticker(title: title);
-        await DBProvider.db.newTicker(t);
+        await DBProvider.db.newTicker(Ticker(title: el["symbol"]));
       }
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => StockScreenerList()));
-    }).catchError((error) {
-      print(error);
+          MaterialPageRoute(builder: (context) => const StockScreenerList()));
     });
+
     return Scaffold(
         appBar: AppBar(title: const Text("Stock screener")),
         backgroundColor: Colors.blue,

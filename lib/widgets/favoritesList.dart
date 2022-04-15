@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:coffee/widgets/qouteWidget.dart';
 import 'package:coffee/database/database.dart';
-import 'package:coffee/database/models/ticker.dart';
+import 'package:coffee/models/ticker.dart';
+
 
 class FavoritesList extends StatefulWidget {
   const FavoritesList({Key? key}) : super(key: key);
@@ -15,9 +16,9 @@ class FavoritesListState extends State<FavoritesList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Favorites")),
-      body: FutureBuilder<List<Ticker>>(
+      body: FutureBuilder(
         future: DBProvider.db.getFavoriteTicker(),
-        builder: (BuildContext context, AsyncSnapshot<List<Ticker>> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             return ListView.builder(
               itemCount: snapshot.data?.length,
